@@ -1,5 +1,8 @@
-﻿ using UnityEngine;
-#if ENABLE_INPUT_SYSTEM 
+﻿using UnityEngine;
+using Unity.Netcode;
+using Cinemachine;
+
+#if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
 
@@ -12,7 +15,7 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM 
     [RequireComponent(typeof(PlayerInput))]
 #endif
-    public class ThirdPersonController : MonoBehaviour
+    public class ThirdPersonController : NetworkBehaviour
     {
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
@@ -123,6 +126,9 @@ namespace StarterAssets
             }
         }
 
+        [SerializeField] private CinemachineVirtualCamera virtualCamera;
+        [SerializeField] private AudioListener audioListener;
+        [SerializeField] private PlayerInput playerInput;
 
         private void Awake()
         {
@@ -130,6 +136,20 @@ namespace StarterAssets
             if (_mainCamera == null)
             {
                 _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
+            }
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            if (IsOwner)
+            {
+                audioListener.enabled = true;
+                playerInput.enabled = true;
+                virtualCamera.Priority = 1;
+            }
+            else
+            {
+                virtualCamera.Priority = 0;
             }
         }
 
@@ -155,11 +175,20 @@ namespace StarterAssets
 
         private void Update()
         {
-            _hasAnimator = TryGetComponent(out _animator);
+            if (IsOwner)
+            {
+                _hasAnimator = TryGetComponent(out _animator);
 
-            JumpAndGravity();
-            GroundedCheck();
-            Move();
+                JumpAndGravity();
+                GroundedCheck();
+                Move();
+            }
+            else
+            {
+                return;
+            }
+
+          
         }
 
         private void LateUpdate()
