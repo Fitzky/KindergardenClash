@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
-using Unity.Netcode;
-using Cinemachine;
-
-#if ENABLE_INPUT_SYSTEM
+#if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
 
@@ -15,7 +12,7 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM 
     [RequireComponent(typeof(PlayerInput))]
 #endif
-    public class ThirdPersonController : NetworkBehaviour
+    public class ThirdPersonController : MonoBehaviour
     {
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
@@ -30,8 +27,10 @@ namespace StarterAssets
 
         [Tooltip("Acceleration and deceleration")]
         public float SpeedChangeRate = 10.0f;
-        public float Sensitivity = 1f;
 
+        public AudioSource AudioFootsteps;
+        public AudioSource LandingAudio;
+        public AudioSource AudioFoley;
         public AudioClip LandingAudioClip;
         public AudioClip[] FootstepAudioClips;
         [Range(0, 1)] public float FootstepAudioVolume = 0.5f;
@@ -126,9 +125,6 @@ namespace StarterAssets
             }
         }
 
-        [SerializeField] private CinemachineVirtualCamera virtualCamera;
-        [SerializeField] private AudioListener audioListener;
-        [SerializeField] private PlayerInput playerInput;
 
         private void Awake()
         {
@@ -139,24 +135,10 @@ namespace StarterAssets
             }
         }
 
-        public override void OnNetworkSpawn()
-        {
-            if (IsOwner)
-            {
-                audioListener.enabled = true;
-                playerInput.enabled = true;
-                virtualCamera.Priority = 1;
-            }
-            else
-            {
-                virtualCamera.Priority = 0;
-            }
-        }
-
         private void Start()
         {
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-            
+
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<StarterAssetsInputs>();
@@ -175,20 +157,11 @@ namespace StarterAssets
 
         private void Update()
         {
-            if (IsOwner)
-            {
-                _hasAnimator = TryGetComponent(out _animator);
+            _hasAnimator = TryGetComponent(out _animator);
 
-                JumpAndGravity();
-                GroundedCheck();
-                Move();
-            }
-            else
-            {
-                return;
-            }
-
-          
+            JumpAndGravity();
+            GroundedCheck();
+            Move();
         }
 
         private void LateUpdate()
@@ -228,8 +201,8 @@ namespace StarterAssets
                 //Don't multiply mouse input by Time.deltaTime;
                 float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
-                _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier * Sensitivity;
-                _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier * Sensitivity;
+                _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier;
+                _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier;
             }
 
             // clamp our rotations so our values are limited 360 degrees
@@ -399,20 +372,15 @@ namespace StarterAssets
                 GroundedRadius);
         }
 
-        public void SetSensitivity (float newSensitivity)
-        {
-            Sensitivity = newSensitivity;
-        }
-
         private void OnFootstep(AnimationEvent animationEvent)
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
             {
-                if (FootstepAudioClips.Length > 0)
-                {
-                    var index = Random.Range(0, FootstepAudioClips.Length);
-                    AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.TransformPoint(_controller.center), FootstepAudioVolume);
-                }
+
+                if (AudioFootsteps != null)
+                    AudioFootsteps.Play();
+                if (AudioFoley != null)
+                    AudioFoley.Play();
             }
         }
 
@@ -420,7 +388,9 @@ namespace StarterAssets
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
             {
-                AudioSource.PlayClipAtPoint(LandingAudioClip, transform.TransformPoint(_controller.center), FootstepAudioVolume);
+                if (LandingAudio != null)
+                    LandingAudio.Play();
+
             }
         }
     }

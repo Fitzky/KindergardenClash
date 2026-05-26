@@ -21,7 +21,7 @@ public class ThirdPersonShooterController : MonoBehaviour
 
     private void Update()
     {
-        if (starterAssetsInputs.aim)
+        /* if (starterAssetsInputs.aim)
         {
             aimVirtualCamera.gameObject.SetActive(true);
             thirdPersonController.SetSensitivity(aimSensitivity);
@@ -33,5 +33,6 @@ public class ThirdPersonShooterController : MonoBehaviour
             thirdPersonController.SetSensitivity(normalSensitivity);
             crosshair.SetActive(false);
         }
+        */ 
     }
 }
