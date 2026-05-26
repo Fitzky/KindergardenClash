@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "Fire",
+    "maps": [
+        {
+            "name": "Attack",
+            "id": "e5958352-437d-4e8f-809a-3d6b1caf2c0e",
+            "actions": [
+                {
+                    "name": "Attack",
+                    "type": "Button",
+                    "id": "00dc7df6-9c29-4d52-ba14-1fb0d49770ad",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "31f4abbe-eebf-479e-9e77-80d651fcc2b6",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Attack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

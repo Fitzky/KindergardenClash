@@ -1,6 +1,4 @@
-﻿ using UnityEngine;
- using Unity.Netcode;
- using Cinemachine;
+﻿using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
@@ -14,7 +12,7 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM 
     [RequireComponent(typeof(PlayerInput))]
 #endif
-    public class ThirdPersonController : NetworkBehaviour
+    public class ThirdPersonController : MonoBehaviour
     {
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
@@ -30,6 +28,9 @@ namespace StarterAssets
         [Tooltip("Acceleration and deceleration")]
         public float SpeedChangeRate = 10.0f;
 
+        public AudioSource AudioFootsteps;
+        public AudioSource LandingAudio;
+        public AudioSource AudioFoley;
         public AudioClip LandingAudioClip;
         public AudioClip[] FootstepAudioClips;
         [Range(0, 1)] public float FootstepAudioVolume = 0.5f;
@@ -107,7 +108,6 @@ namespace StarterAssets
         private CharacterController _controller;
         private StarterAssetsInputs _input;
         private GameObject _mainCamera;
-        private CinemachineVirtualCamera _cam;
 
         private const float _threshold = 0.01f;
 
@@ -133,20 +133,20 @@ namespace StarterAssets
             {
                 _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
             }
-
-            if (_cam == null)
-            {
-                _cam = FindObjectOfType<CinemachineVirtualCamera>();
-            }
         }
 
         private void Start()
         {
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-            
+
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<StarterAssetsInputs>();
+#if ENABLE_INPUT_SYSTEM 
+            _playerInput = GetComponent<PlayerInput>();
+#else
+			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
+#endif
 
             AssignAnimationIDs();
 
@@ -155,28 +155,13 @@ namespace StarterAssets
             _fallTimeoutDelta = FallTimeout;
         }
 
-        public override void OnNetworkSpawn()
-        {
-            base.OnNetworkSpawn();
-
-            if (IsClient && IsOwner)
-            {
-                _playerInput = GetComponent<PlayerInput>();
-                _playerInput.enabled = true;
-                _cam.Follow = transform.GetChild(0);
-            }
-        }
-
         private void Update()
         {
-            if (IsOwner)
-            {
-                _hasAnimator = TryGetComponent(out _animator);
+            _hasAnimator = TryGetComponent(out _animator);
 
-                JumpAndGravity();
-                GroundedCheck();
-                Move();
-            }
+            JumpAndGravity();
+            GroundedCheck();
+            Move();
         }
 
         private void LateUpdate()
@@ -391,11 +376,11 @@ namespace StarterAssets
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
             {
-                if (FootstepAudioClips.Length > 0)
-                {
-                    var index = Random.Range(0, FootstepAudioClips.Length);
-                    AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.TransformPoint(_controller.center), FootstepAudioVolume);
-                }
+
+                if (AudioFootsteps != null)
+                    AudioFootsteps.Play();
+                if (AudioFoley != null)
+                    AudioFoley.Play();
             }
         }
 
@@ -403,7 +388,9 @@ namespace StarterAssets
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
             {
-                AudioSource.PlayClipAtPoint(LandingAudioClip, transform.TransformPoint(_controller.center), FootstepAudioVolume);
+                if (LandingAudio != null)
+                    LandingAudio.Play();
+
             }
         }
     }
