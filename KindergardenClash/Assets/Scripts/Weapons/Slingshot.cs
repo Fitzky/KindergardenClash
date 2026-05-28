@@ -4,6 +4,8 @@ public class Slingshot : MonoBehaviour
 {
     [SerializeField] Transform firePoint;
     [SerializeField] GameObject rockPrefab;
+    [SerializeField] float force = 90f;
+    [SerializeField] LayerMask ignoreLayer;
 
     bool isCharging;
     int ammo = 10;
@@ -23,7 +25,7 @@ public class Slingshot : MonoBehaviour
             Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
             RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, ~ignoreLayer))
             { 
                 target = hit.point;
             }
@@ -44,7 +46,9 @@ public class Slingshot : MonoBehaviour
     void Shoot(Vector3 target)
     {
         float power = Mathf.Clamp(chargeTime / maxChargeTime, 0.1f, 1f);
-        //Instantiate projectile with power
+        GameObject proj = Instantiate(rockPrefab, firePoint.position, Quaternion.identity);
+        Rigidbody rb   = proj.GetComponent<Rigidbody>();
+        rb.AddForce((target - firePoint.position).normalized * power * force, ForceMode.Impulse);
         ammo--;
         chargeTime = 0;
     }

@@ -1,10 +1,10 @@
 using UnityEngine;
 using System.Collections;
 
-public class Stick : MonoBehaviour
+public class Sword : MonoBehaviour
 {
     bool isAttacking = false;
-    [SerializeField] float attackDuration = 1;
+    [SerializeField] float attackDuration = 2;
     [SerializeField] float attackCooldown = 0.5f;
     float nextAttack;
 
@@ -27,9 +27,9 @@ public class Stick : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if(isAttacking && other.CompareTag("Enemy"))
+        if (isAttacking && other.CompareTag("Enemy"))
         {
-            //Damage enemy
+            //Damage enemy + Do knockback
         }
     }
 }
